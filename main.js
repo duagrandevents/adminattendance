@@ -129,7 +129,8 @@ Alpine.data('manpowerApp', () => ({
             .channel('public:any')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, payload => {
                 console.log('Event changed!', payload);
-                this.loadEvent(); // Refresh all for simplicity
+                this.loadEventsList();
+                // If we are in detail view, we might want to refresh that too, but list is priority for dashboard
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'boys' }, payload => {
                 console.log('Boys changed!', payload);
