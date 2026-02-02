@@ -438,65 +438,73 @@ Alpine.data('manpowerApp', () => ({
     },
 
     async saveEventToSupabase() {
+        console.log("Save button clicked!");
+        // alert("Starting Save Process..."); // Debug alert
+
         if (!this.eventData.location) {
-            alert("No event data to save!");
+            alert("Missing Location! Cannot save.");
             return;
         }
 
-        // 1. Create/Update Event
-        const payload = {
-            date: this.eventData.date,
-            day: this.eventData.day,
-            location: this.eventData.location,
-            schedule: this.eventData.schedule,
-            target_count: this.eventData.targetCount,
-            report_time: this.eventData.reportTime
-        };
+        try {
+            // 1. Create/Update Event
+            const payload = {
+                date: this.eventData.date,
+                day: this.eventData.day,
+                location: this.eventData.location,
+                schedule: this.eventData.schedule,
+                target_count: this.eventData.targetCount,
+                report_time: this.eventData.reportTime
+            };
 
-        let currentEventId = this.eventId;
+            let currentEventId = this.eventId;
 
-        if (currentEventId) {
-            await supabase.from('events').update(payload).eq('id', currentEventId);
-        } else {
-            const { data, error } = await supabase.from('events').insert([payload]).select();
-            if (error) {
-                alert("Error creating event: " + error.message);
-                return;
-            }
-            if (data && data[0]) {
-                currentEventId = data[0].id;
-                this.eventId = currentEventId;
-            }
-        }
-
-        // 2. Insert Boys
-        if (this.eventData.boys.length > 0) {
-            // Filter out boys that might already have IDs (if we are editing an existing event and adding more? 
-            // For now, let's assume this flow is mostly for fresh pastes or re-pastes which might duplications if not careful.
-            // Given the requirements, we'll process the current 'local' boys list.
-
-            // Transform for DB
-            const dbBoys = this.eventData.boys
-                .filter(b => !b.id) // Only insert boys without ID (new ones)
-                .map(b => ({
-                    event_id: currentEventId,
-                    name: b.name,
-                    mobile: b.mobile,
-                    status: b.status || 'pending'
-                }));
-
-            if (dbBoys.length > 0) {
-                const { error } = await supabase.from('boys').insert(dbBoys);
+            if (currentEventId) {
+                await supabase.from('events').update(payload).eq('id', currentEventId);
+            } else {
+                const { data, error } = await supabase.from('events').insert([payload]).select();
                 if (error) {
-                    console.error("Error inserting boys:", error);
-                    alert("Error adding boys to database");
+                    alert("Error creating event: " + error.message);
+                    return;
+                }
+                if (data && data[0]) {
+                    currentEventId = data[0].id;
+                    this.eventId = currentEventId;
                 }
             }
-        }
 
-        alert("Event Saved & Published to Captains! ✅");
-        this.isUnsaved = false;
-        this.loadEventsList(); // Refresh dashboard list
+            // 2. Insert Boys
+            if (this.eventData.boys.length > 0) {
+                // Filter out boys that might already have IDs (if we are editing an existing event and adding more? 
+                // For now, let's assume this flow is mostly for fresh pastes or re-pastes which might duplications if not careful.
+                // Given the requirements, we'll process the current 'local' boys list.
+
+                // Transform for DB
+                const dbBoys = this.eventData.boys
+                    .filter(b => !b.id) // Only insert boys without ID (new ones)
+                    .map(b => ({
+                        event_id: currentEventId,
+                        name: b.name,
+                        mobile: b.mobile,
+                        status: b.status || 'pending'
+                    }));
+
+                if (dbBoys.length > 0) {
+                    const { error } = await supabase.from('boys').insert(dbBoys);
+                    if (error) {
+                        console.error("Error inserting boys:", error);
+                        alert("Error adding boys to database");
+                    }
+                }
+            }
+
+            alert("Event Saved & Published to Captains! ✅");
+            this.isUnsaved = false;
+            this.loadEventsList(); // Refresh dashboard list
+        } catch (e) {
+            console.error(e);
+            alert("Error saving event: " + e.message);
+        }
     },
 
     // --- Report Generation ---
