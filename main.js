@@ -32,6 +32,7 @@ Alpine.data('manpowerApp', () => ({
 
     // Admin State
     adminMode: true,
+    isUnsaved: false,
 
     async init() {
         console.log("Initializing Admin App...");
@@ -411,6 +412,7 @@ Alpine.data('manpowerApp', () => ({
         }
 
         // Update local state to show immediately? No, wait for realtime or confirm.
+        // Update local state to show preview
         this.eventData.date = extractedDate || this.eventData.date;
         this.eventData.day = day;
         this.eventData.location = extractedLocation || this.eventData.location;
@@ -418,31 +420,83 @@ Alpine.data('manpowerApp', () => ({
         this.eventData.schedule = extractedSchedule || this.eventData.schedule;
         if (targetCount) this.eventData.targetCount = targetCount;
 
-        await this.createOrUpdateEvent(); // Syncs metadata to DB
-
-        // 3. Insert Boys
-        if (boysToInsert.length > 0 && this.eventId) {
-            // Transform for DB
-            const dbBoys = boysToInsert.map(b => ({
-                event_id: this.eventId,
+        // Preview Boys (Local only)
+        if (boysToInsert.length > 0) {
+            this.eventData.boys = boysToInsert.map(b => ({
                 name: b.name,
                 mobile: b.mobile,
                 status: 'pending' // Default status
             }));
+        }
 
-            // We want to avoid duplicates. 
-            // Simple strategy: Just insert. If admin/user pastes duplicates, they appear.
-            // Or clean up? Let's insert for now.
-            const { error } = await supabase.from('boys').insert(dbBoys);
+        this.isUnsaved = true; // Flag to show Save button
+        this.isUpdateListModalOpen = false;
+        this.pastedText = '';
+
+        // Ensure we are in detail view to see the preview
+        this.currentView = 'detail';
+    },
+
+    async saveEventToSupabase() {
+        if (!this.eventData.location) {
+            alert("No event data to save!");
+            return;
+        }
+
+        // 1. Create/Update Event
+        const payload = {
+            date: this.eventData.date,
+            day: this.eventData.day,
+            location: this.eventData.location,
+            schedule: this.eventData.schedule,
+            target_count: this.eventData.targetCount,
+            report_time: this.eventData.reportTime
+        };
+
+        let currentEventId = this.eventId;
+
+        if (currentEventId) {
+            await supabase.from('events').update(payload).eq('id', currentEventId);
+        } else {
+            const { data, error } = await supabase.from('events').insert([payload]).select();
             if (error) {
-                console.error("Error inserting parsed boys:", error);
-                alert("Error adding boys to database");
+                alert("Error creating event: " + error.message);
+                return;
+            }
+            if (data && data[0]) {
+                currentEventId = data[0].id;
+                this.eventId = currentEventId;
             }
         }
 
-        this.isUpdateListModalOpen = false;
-        this.pastedText = '';
-        // UI updates via Realtime subscription
+        // 2. Insert Boys
+        if (this.eventData.boys.length > 0) {
+            // Filter out boys that might already have IDs (if we are editing an existing event and adding more? 
+            // For now, let's assume this flow is mostly for fresh pastes or re-pastes which might duplications if not careful.
+            // Given the requirements, we'll process the current 'local' boys list.
+
+            // Transform for DB
+            const dbBoys = this.eventData.boys
+                .filter(b => !b.id) // Only insert boys without ID (new ones)
+                .map(b => ({
+                    event_id: currentEventId,
+                    name: b.name,
+                    mobile: b.mobile,
+                    status: b.status || 'pending'
+                }));
+
+            if (dbBoys.length > 0) {
+                const { error } = await supabase.from('boys').insert(dbBoys);
+                if (error) {
+                    console.error("Error inserting boys:", error);
+                    alert("Error adding boys to database");
+                }
+            }
+        }
+
+        alert("Event Saved & Published to Captains! ✅");
+        this.isUnsaved = false;
+        this.loadEventsList(); // Refresh dashboard list
     },
 
     // --- Report Generation ---
