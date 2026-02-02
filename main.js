@@ -5,13 +5,16 @@ import { supabase } from './supabaseClient'
 window.Alpine = Alpine
 
 Alpine.data('manpowerApp', () => ({
-    eventId: null, // Track the current event ID
+    eventId: null,
+    currentView: 'list', // 'list' | 'detail'
+    eventsList: [],
+
     eventData: {
-        date: '---',
-        day: '---',
-        reportTime: '---',
-        location: '---',
-        schedule: '---',
+        date: '',
+        day: '',
+        reportTime: '',
+        location: '',
+        schedule: '',
         targetCount: 15,
         boys: []
     },
@@ -31,41 +34,75 @@ Alpine.data('manpowerApp', () => ({
     adminMode: true,
 
     async init() {
-        console.log("Initializing Supabase App...");
-        await this.loadEvent();
+        console.log("Initializing Admin App...");
+        await this.loadEventsList();
         this.setupRealtime();
+
+        // Mobile-friendly: fix height
+        const setVh = () => {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        };
+        window.addEventListener('resize', setVh);
+        setVh();
     },
 
-    async loadEvent() {
-        // Fetch the latest event
+    async loadEventsList() {
         const { data: events, error } = await supabase
             .from('events')
             .select('*')
-            .order('created_at', { ascending: false })
-            .limit(1);
+            .order('created_at', { ascending: false });
 
         if (error) {
-            console.error('Error fetching event:', error);
-            return;
-        }
-
-        if (events && events.length > 0) {
-            const event = events[0];
-            this.eventId = event.id;
-            this.eventData.date = event.date;
-            this.eventData.day = event.day;
-            this.eventData.location = event.location;
-            this.eventData.schedule = event.schedule;
-            this.eventData.reportTime = event.report_time;
-            this.eventData.targetCount = event.target_count;
-
-            // Load Boys for this event
-            await this.loadBoys();
+            console.error('Error fetching events:', error);
         } else {
-            // No event exists, create a default one? Or wait for update?
-            console.log("No active event found.");
+            this.eventsList = events || [];
         }
     },
+
+    openCreateEvent() {
+        this.resetEventData();
+        this.currentView = 'detail';
+        // Auto-open update modal or just create form?
+        // User said "coded page will appear", which implies the main UI.
+        // We probably want to prompt the "Update List" modal immediately or let them click it.
+        // Let's just show the empty state.
+    },
+
+    async selectEvent(event) {
+        this.eventId = event.id;
+        this.eventData.date = event.date;
+        this.eventData.day = event.day;
+        this.eventData.location = event.location;
+        this.eventData.schedule = event.schedule;
+        this.eventData.reportTime = event.report_time;
+        this.eventData.targetCount = event.target_count;
+        this.currentView = 'detail';
+        await this.loadBoys();
+    },
+
+    resetEventData() {
+        this.eventId = null;
+        this.eventData = {
+            date: '',
+            day: '',
+            reportTime: '',
+            location: '',
+            schedule: '',
+            targetCount: 15,
+            boys: []
+        };
+    },
+
+    backToDashboard() {
+        this.currentView = 'list';
+        this.refreshDashboard();
+    },
+
+    async refreshDashboard() {
+        await this.loadEventsList();
+    },
+
 
     async loadBoys() {
         if (!this.eventId) return;
