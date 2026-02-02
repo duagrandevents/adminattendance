@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manpower Admin</title>
+    <link href="./style.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 pb-20 select-none" x-data="manpowerApp">
+
+    <!-- 🔹 Sticky Header -->
+    <header
+        class="fixed top-0 inset-x-0 z-50 bg-white shadow-sm border-b border-gray-100 h-16 flex items-center justify-between px-4 transition-all duration-300">
+        <a href="#" class="text-xl font-bold text-gray-800 tracking-tight">Dua Manpower</a>
+
+        <div class="flex items-center gap-2">
+            <!-- Call Button -->
+            <a href="tel:+918606339671"
+                class="p-2 text-green-600 hover:bg-green-50 rounded-full transition-colors active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                        d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                </svg>
+            </a>
+
+            <!-- Admin Button -->
+            <button @click="isAdminModalOpen = true"
+                class="p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-full transition-colors active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Spacer for Header -->
+    <div class="h-16"></div>
+
+    <!-- 🔹 Live Summary Bar (Sticky below Header) -->
+    <div
+        class="sticky top-16 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm py-3 px-4 flex justify-between items-center text-sm font-medium">
+        <div class="flex flex-col items-center">
+            <span class="text-xs text-gray-500 uppercase tracking-wide">Present</span>
+            <div class="flex items-center gap-1 text-green-600 font-bold text-lg leading-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd" />
+                </svg>
+                <span x-text="presentCount">0</span>
+            </div>
+        </div>
+        <div class="h-8 w-px bg-gray-200"></div>
+        <div class="flex flex-col items-center">
+            <span class="text-xs text-gray-500 uppercase tracking-wide">Dress</span>
+            <div class="flex items-center gap-1 text-blue-600 font-bold text-lg leading-none">
+                <span class="text-lg">🧥</span>
+                <span x-text="dressCount">0</span>
+            </div>
+        </div>
+        <div class="h-8 w-px bg-gray-200"></div>
+        <div class="flex flex-col items-center">
+            <span class="text-xs text-gray-500 uppercase tracking-wide">Out</span>
+            <div class="flex items-center gap-1 text-red-600 font-bold text-lg leading-none">
+                <span class="text-lg">🚩</span>
+                <span x-text="outCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <main class="p-4 max-w-md mx-auto space-y-4">
+
+        <!-- 🔹 Event Info Card -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-3">
+                <button @click="isEditEventModalOpen = true" x-show="adminMode"
+                    class="p-2 text-gray-400 hover:text-blue-600 bg-gray-50 hover:bg-white rounded-full transition-all shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                    <span class="text-2xl">📅</span>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">Date & Day</p>
+                        <p class="font-semibold text-gray-800"><span x-text="eventData.date"></span> <span
+                                class="text-gray-400 mx-1">•</span> <span x-text="eventData.day"></span></p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="text-2xl">📍</span>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">Location</p>
+                        <p class="font-semibold text-gray-800" x-text="eventData.location"></p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 pt-2">
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">Report Time</p>
+                        <p class="font-semibold text-gray-800" x-text="eventData.reportTime"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">Schedule</p>
+                        <p class="font-semibold text-gray-800" x-text="eventData.schedule"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔹 Boys List Section -->
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold text-gray-800">Boys List</h2>
+                <div class="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    <span x-text="eventData.boys.length"></span> / <span x-text="eventData.targetCount"></span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500"
+                    :style="`width: ${fillPercentage}%`"></div>
+            </div>
+
+            <!-- Manually Add Boy -->
+            <div class="flex gap-2" x-show="adminMode" x-transition>
+                <input type="text" placeholder="Add Name..."
+                    class="flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow disabled:bg-gray-50"
+                    :disabled="eventData.boys.length >= eventData.targetCount" x-data="{ tempName: '' }"
+                    x-model="tempName" @keydown.enter="if(tempName) { addBoy(tempName, ''); tempName=''; }">
+                <button
+                    class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 transition-colors active:scale-95"
+                    :disabled="eventData.boys.length >= eventData.targetCount"
+                    @click="if($event.target.previousElementSibling.value) { addBoy($event.target.previousElementSibling.value, ''); $event.target.previousElementSibling.value=''; }">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- List Items -->
+            <ul class="space-y-3 pb-24">
+                <template x-for="(boy, index) in eventData.boys" :key="index">
+                    <li x-data="{ showFines: false }"
+                        class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-md">
+                        <!-- Card Header: Info and Status Indicator -->
+                        <div class="p-3 flex justify-between items-start cursor-pointer"
+                            @click="openEditBoyModal(index)">
+                            <div class="flex gap-3">
+                                <span
+                                    class="bg-gray-100 text-gray-500 font-bold text-xs h-6 w-6 flex items-center justify-center rounded-full mt-0.5"
+                                    x-text="index + 1"></span>
+                                <div>
+                                    <h3 class="font-bold text-gray-800 leading-tight" x-text="boy.name"></h3>
+                                    <p class="text-xs text-gray-500 mt-0.5" x-text="boy.mobile || 'No Mobile'"></p>
+                                </div>
+                            </div>
+                            <!-- Status Badge -->
+                            <div>
+                                <span class="px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wide border"
+                                    :class="{
+                                          'bg-gray-50 text-gray-500 border-gray-200': boy.status === 'pending',
+                                          'bg-green-50 text-green-600 border-green-200': boy.status === 'in' && !boy.uniformChecked,
+                                          'bg-blue-50 text-blue-600 border-blue-200': boy.status === 'in' && boy.uniformChecked,
+                                          'bg-red-50 text-red-600 border-red-200': boy.status === 'out'
+                                      }">
+                                    <span
+                                        x-text="boy.status === 'pending' ? 'Pending' : (boy.status === 'out' ? 'Out' : (boy.uniformChecked ? 'Dressed' : 'Inside'))"></span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="bg-gray-50 px-3 py-2 flex gap-2 border-t border-gray-100" x-show="adminMode">
+                            <!-- Show valid transitions -->
+                            <template x-if="boy.status === 'pending'">
+                                <button @click="updateBoyStatus(index, 'IN')"
+                                    class="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 rounded-lg transition-colors shadow-sm active:scale-95">
+                                    IN
+                                </button>
+                            </template>
+
+                            <!-- If IN but NOT dressed: Show ONLY Dress -->
+                            <template x-if="boy.status === 'in' && !boy.uniformChecked">
+                                <div class="flex gap-2 w-full">
+                                    <button @click="updateBoyStatus(index, 'DRESS')"
+                                        class="flex-[3] bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-2 rounded-lg transition-colors shadow-sm active:scale-95">
+                                        DRESS 🧥
+                                    </button>
+                                    <button @click="showFines = !showFines"
+                                        class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-white text-xs font-bold py-2 rounded-lg transition-colors shadow-sm active:scale-95">
+                                        F
+                                    </button>
+                                </div>
+                            </template>
+
+                            <!-- If IN AND dressed: Show ONLY Out -->
+                            <template x-if="boy.uniformChecked">
+                                <button @click="updateBoyStatus(index, 'OUT')"
+                                    class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2 rounded-lg transition-colors shadow-sm active:scale-95">
+                                    OUT 🚩
+                                </button>
+                            </template>
+
+                            <template x-if="boy.status === 'out'">
+                                <button @click="updateBoyStatus(index, 'RESET')"
+                                    class="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold py-2 rounded-lg transition-colors shadow-sm active:scale-95">
+                                    RESET
+                                </button>
+                            </template>
+                        </div>
+                        <!-- Fine Options Panel -->
+                        <template x-if="showFines && boy.status === 'in' && !boy.uniformChecked">
+                            <div
+                                class="bg-yellow-50 px-3 py-2 flex gap-2 border-t border-yellow-100 animate-fade-in-down">
+                                <button @click="toggleFine(index, 'shoe')"
+                                    :class="boy.fines && boy.fines.includes('shoe') ? 'bg-orange-500 text-white border-orange-600' : 'bg-white text-gray-700 border-gray-200'"
+                                    class="flex-1 border text-xs font-bold py-1.5 rounded-lg transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1">
+                                    <span>👞</span> Shoe
+                                </button>
+                                <button @click="toggleFine(index, 'pant')"
+                                    :class="boy.fines && boy.fines.includes('pant') ? 'bg-orange-500 text-white border-orange-600' : 'bg-white text-gray-700 border-gray-200'"
+                                    class="flex-1 border text-xs font-bold py-1.5 rounded-lg transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1">
+                                    <span>👖</span> Pant
+                                </button>
+                                <button @click="toggleFine(index, 'late')"
+                                    :class="boy.fines && boy.fines.includes('late') ? 'bg-orange-500 text-white border-orange-600' : 'bg-white text-gray-700 border-gray-200'"
+                                    class="flex-1 border text-xs font-bold py-1.5 rounded-lg transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1">
+                                    <span>⏰</span> Time
+                                </button>
+                            </div>
+                        </template>
+                    </li>
+                </template>
+            </ul>
+
+            <div x-show="eventData.boys.length === 0" class="text-center py-10 text-gray-400">
+                <p>No boys added yet.</p>
+                <p class="text-sm">Use "Update" to paste a list.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Floating Action Button for Report -->
+    <!-- Floating Action Buttons -->
+    <div class="fixed bottom-6 right-6 z-40 flex flex-col-reverse gap-4 items-center sm:flex-row">
+        <!-- WhatsApp Button -->
+        <button @click="shareReport"
+            class="h-14 w-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-90 animate-bounce-slow">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                    d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+            </svg>
+        </button>
+
+        <!-- Copy / iOS Share Button -->
+        <button @click="copyReport"
+            class="h-14 w-14 bg-gray-800 hover:bg-black text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-90">
+            <!-- iOS Share Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- 🔹 MODALS -->
+
+    <!-- Admin Dashboard Modal -->
+    <div x-show="isAdminModalOpen" x-transition.opacity
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" x-cloak>
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
+            @click.away="isAdminModalOpen = false">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-bold text-gray-800">Admin Dashboard</h3>
+                <button @click="isAdminModalOpen = false" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+
+                <!-- Admin Mode Toggle -->
+                <div class="flex items-center justify-between bg-blue-50 p-3 rounded-xl border border-blue-100">
+                    <div>
+                        <p class="font-bold text-gray-800 text-sm">Edit Mode</p>
+                        <p class="text-xs text-blue-600">Enable editing controls</p>
+                    </div>
+                    <button @click="adminMode = !adminMode"
+                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+                        :class="adminMode ? 'bg-blue-600' : 'bg-gray-300'">
+                        <span
+                            class="inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out"
+                            :class="adminMode ? 'translate-x-6' : 'translate-x-1'"></span>
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Event Management</p>
+
+                    <button @click="isUpdateListModalOpen = true; isAdminModalOpen = false"
+                        class="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                        <span
+                            class="bg-green-100 text-green-600 p-2 rounded-lg group-hover:scale-110 transition-transform">📋</span>
+                        <div>
+                            <p class="font-bold text-gray-800 text-sm">Update / Paste List</p>
+                            <p class="text-xs text-gray-500">Import from WhatsApp</p>
+                        </div>
+                    </button>
+
+                    <button @click="isEditEventModalOpen = true; isAdminModalOpen = false"
+                        class="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                        <span
+                            class="bg-purple-100 text-purple-600 p-2 rounded-lg group-hover:scale-110 transition-transform">📅</span>
+                        <div>
+                            <p class="font-bold text-gray-800 text-sm">Edit Event Details</p>
+                            <p class="text-xs text-gray-500">Change date, time, venue</p>
+                        </div>
+                    </button>
+
+                    <button @click="saveData"
+                        class="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                        <span
+                            class="bg-blue-100 text-blue-600 p-2 rounded-lg group-hover:scale-110 transition-transform">💾</span>
+                        <div>
+                            <p class="font-bold text-gray-800 text-sm">Save Data</p>
+                            <p class="text-xs text-gray-500">Save current state locally</p>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="pt-2 border-t border-gray-100">
+                    <button @click="resetData(); isAdminModalOpen = false"
+                        class="w-full flex items-center justify-center gap-2 p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-bold text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Reset Application
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update List Modal -->
+    <div x-show="isUpdateListModalOpen" x-transition.opacity
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" x-cloak>
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden transform transition-all"
+            @click.away="isUpdateListModalOpen = false">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-800">Paste WhatsApp List</h3>
+                    <button @click="isUpdateListModalOpen = false" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500 mb-2">Paste the entire WhatsApp message below. We'll extract details.
+                </p>
+                <textarea x-model="pastedText"
+                    class="w-full h-40 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-gray-50"
+                    placeholder="Date: ... Time: ... 1. Name..."></textarea>
+                <div class="mt-4 flex justify-end gap-3">
+                    <button @click="isUpdateListModalOpen = false"
+                        class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors">Cancel</button>
+                    <button @click="parseWhatsAppText()"
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-md transition-transform active:scale-95">Parse
+                        & Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Event Modal -->
+    <div x-show="isEditEventModalOpen" x-transition.opacity
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" x-cloak>
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl" @click.away="isEditEventModalOpen = false">
+            <div class="p-6 space-y-4">
+                <h3 class="text-lg font-bold text-gray-800">Edit Event Details</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Date</label>
+                        <input type="text" x-model="eventData.date"
+                            class="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Day</label>
+                        <input type="text" x-model="eventData.day"
+                            class="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Location</label>
+                    <input type="text" x-model="eventData.location"
+                        class="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Time</label>
+                        <input type="text" x-model="eventData.reportTime"
+                            class="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Schedule</label>
+                        <input type="text" x-model="eventData.schedule"
+                            class="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Target Count</label>
+                    <input type="number" x-model="eventData.targetCount"
+                        class="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button @click="isEditEventModalOpen = false"
+                        class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Boy Modal -->
+    <div x-show="isEditBoyModalOpen" x-transition.opacity
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" x-cloak>
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl" @click.away="isEditBoyModalOpen = false">
+            <div class="p-6 space-y-4">
+                <h3 class="text-lg font-bold text-gray-800">Edit Worker</h3>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Name</label>
+                    <input type="text" x-model="editingBoyData.name"
+                        class="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Mobile</label>
+                    <input type="text" x-model="editingBoyData.mobile"
+                        class="w-full border border-gray-200 rounded-lg p-2 text-sm">
+                </div>
+                <div class="flex flex-col gap-3 mt-6">
+                    <button @click="saveEditedBoy"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 text-sm font-bold shadow-md">Save
+                        Changes</button>
+                    <button @click="deleteBoy"
+                        class="w-full bg-red-50 hover:bg-red-100 text-red-600 rounded-lg py-3 text-sm font-bold">Delete
+                        Worker</button>
+                    <button @click="isEditBoyModalOpen = false"
+                        class="w-full text-gray-500 hover:text-gray-700 py-2 text-sm">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module" src="/main.js"></script>
+</body>
+
+</html>
