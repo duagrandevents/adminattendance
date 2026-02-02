@@ -63,10 +63,7 @@ Alpine.data('manpowerApp', () => ({
     openCreateEvent() {
         this.resetEventData();
         this.currentView = 'detail';
-        // Auto-open update modal or just create form?
-        // User said "coded page will appear", which implies the main UI.
-        // We probably want to prompt the "Update List" modal immediately or let them click it.
-        // Let's just show the empty state.
+        this.isUpdateListModalOpen = true;
     },
 
     async selectEvent(event) {
