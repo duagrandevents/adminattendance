@@ -439,7 +439,7 @@ Alpine.data('manpowerApp', () => ({
 
     async saveEventToSupabase() {
         console.log("Save button clicked!");
-        // alert("Starting Save Process..."); // Debug alert
+        alert("Starting Save Process... (Debug)"); // Debug alert enabled
 
         if (!this.eventData.location) {
             alert("Missing Location! Cannot save.");
