@@ -464,28 +464,21 @@
     </div>
 
 
-    <!-- Global Save & Publish Button (Moved outside templates for stability) -->
+    <!-- Global Save & Publish Button -->
     <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[100] w-full max-w-md px-4"
-        x-show="isUnsaved && currentView === 'detail'" x-transition.enter="transition ease-out duration-300"
-        x-transition.enter-start="opacity-0 translate-y-10" x-transition.enter-end="opacity-100 translate-y-0"
-        style="display: none;" x-effect="if(isUnsaved && currentView === 'detail') $el.style.display = 'block'">
-        <button @click="console.log('Inline Click!'); saveEventToSupabase()"
-            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 animate-bounce-slow">
+        x-show="isUnsaved && currentView === 'detail'" x-cloak>
+        <button @click="saveEventToSupabase()"
+            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
-            SAVE & PUBLISH EVENT
+            SAVE & PUBLISH
         </button>
-        <div class="text-center mt-2">
-            <span class="inline-block bg-black/60 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm">
-                Only saved events appear in Captain App
-            </span>
-        </div>
+        <p class="text-center text-xs text-gray-500 mt-2">Click to make this event visible to Captains</p>
     </div>
 
-    <script type="module" src="/main.js?v=hotfix4"></script>
+    <script type="module" src="/main.js?v=5"></script>
 </body>
 
 </html>
