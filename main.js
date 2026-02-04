@@ -97,6 +97,27 @@ Alpine.data('manpowerApp', () => ({
         this.refreshDashboard();
     },
 
+    async deleteEvent(eventId) {
+        if (!confirm('Are you sure you want to delete this event? This cannot be undone.')) {
+            return;
+        }
+
+        try {
+            // Delete boys first (manual cascade)
+            await supabase.from('boys').delete().eq('event_id', eventId);
+
+            const { error } = await supabase.from('events').delete().eq('id', eventId);
+
+            if (error) throw error;
+
+            alert('Event deleted successfully.');
+            await this.loadEventsList();
+        } catch (e) {
+            console.error("Error deleting event:", e);
+            alert("Error deleting event: " + e.message);
+        }
+    },
+
     async refreshDashboard() {
         await this.loadEventsList();
     },
