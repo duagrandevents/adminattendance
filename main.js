@@ -108,7 +108,7 @@ Alpine.data('manpowerApp', () => ({
             .from('boys')
             .select('*')
             .eq('event_id', this.eventId)
-            .order('created_at', { ascending: true });
+            .order('id', { ascending: true });
 
         if (error) {
             console.error('Error fetching boys:', error);
