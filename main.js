@@ -133,7 +133,7 @@ Alpine.data('manpowerApp', () => ({
             .from('boys')
             .select('*')
             .eq('event_id', this.eventId)
-            .order('id', { ascending: true });
+            .order('roll_no', { ascending: true }); // Sort by Roll No
 
         if (error) {
             console.error('Error fetching boys:', error);
@@ -141,6 +141,7 @@ Alpine.data('manpowerApp', () => ({
             // Map DB fields to UI fields
             this.eventData.boys = boys.map(b => ({
                 id: b.id,
+                rollNo: b.roll_no,
                 name: b.name,
                 mobile: b.mobile,
                 status: b.status,
@@ -406,6 +407,7 @@ Alpine.data('manpowerApp', () => ({
                 // Check if line is a numbered list item
                 const listMatch = cleanLine.match(/^(\d+)[\.\)]\s*(.*)/);
                 if (listMatch) {
+                    const rollNo = parseInt(listMatch[1], 10);
                     let content = listMatch[2].trim();
                     let mobile = '';
 
@@ -421,7 +423,7 @@ Alpine.data('manpowerApp', () => ({
 
                     // "1. Name" -> push to list
                     if (name.length > 2) { // Min length check
-                        boysToInsert.push({ name, mobile });
+                        boysToInsert.push({ rollNo, name, mobile });
                     }
                 }
             }
@@ -457,6 +459,7 @@ Alpine.data('manpowerApp', () => ({
             const existing = this.eventData.boys.find(b => b.name.toLowerCase() === newBoy.name.toLowerCase());
 
             return {
+                rollNo: newBoy.rollNo,
                 name: newBoy.name,
                 mobile: newBoy.mobile || (existing ? existing.mobile : ''),
                 status: existing ? existing.status : 'pending',
@@ -524,6 +527,7 @@ Alpine.data('manpowerApp', () => ({
             // Prepare payload
             const boysPayload = this.eventData.boys.map(b => ({
                 event_id: currentEventId,
+                roll_no: b.rollNo, // Save Roll No
                 name: b.name,
                 mobile: b.mobile,
                 status: b.status || 'pending',
