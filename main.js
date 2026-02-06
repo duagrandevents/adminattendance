@@ -336,8 +336,8 @@ Alpine.data('manpowerApp', () => ({
 
         console.log("Parsing text...");
 
-        // 1. Footer Removal
-        const stopPhrases = ['❌❌❌', 'Interested boys mention names', 'READ THE DESCRIPTION'];
+        // 1. Footer Removal (Ported from Admin)
+        const stopPhrases = ['❌', 'Interested boys mention names', 'READ THE DESCRIPTION'];
         for (const phrase of stopPhrases) {
             if (text.includes(phrase)) {
                 text = text.split(phrase)[0];
@@ -441,14 +441,25 @@ Alpine.data('manpowerApp', () => ({
         this.eventData.schedule = extractedSchedule || this.eventData.schedule;
         if (targetCount) this.eventData.targetCount = targetCount;
 
-        // Preview Boys (Local only)
-        if (boysToInsert.length > 0) {
-            this.eventData.boys = boysToInsert.map(b => ({
-                name: b.name,
-                mobile: b.mobile,
-                status: 'pending' // Default status
-            }));
-        }
+        // 3. Construct Final Ordered List (Preserving Status)
+        // We always respect the PASTED order.
+        // We try to match existing boys to preserve their status/fines.
+
+        const finalBoysList = boysToInsert.map(newBoy => {
+            // Find by name (case-insensitive)
+            const existing = this.eventData.boys.find(b => b.name.toLowerCase() === newBoy.name.toLowerCase());
+
+            return {
+                name: newBoy.name,
+                mobile: newBoy.mobile || (existing ? existing.mobile : ''),
+                status: existing ? existing.status : 'pending',
+                uniformChecked: existing ? existing.uniformChecked : false,
+                fines: existing ? existing.fines : []
+                // Note: We intentionally DROP 'id' so they are treated as fresh inserts
+            };
+        });
+
+        this.eventData.boys = finalBoysList; // Update Local Preview
 
         this.isUnsaved = true; // Flag to show Save button
         this.isUpdateListModalOpen = false;
@@ -456,11 +467,17 @@ Alpine.data('manpowerApp', () => ({
 
         // Ensure we are in detail view to see the preview
         this.currentView = 'detail';
+
+        // Suggest saving immediately?
+        // The previous Admin strict saving flow required a separate button. 
+        // But the User request implies "update & parse" should work similarly.
+        // However, Admin has a "Save Data" button. 
+        // Let's UPDATE the `saveData` / `saveEventToSupabase` to use the Overwrite logic.
     },
 
     async saveEventToSupabase() {
         console.log("Save button clicked!");
-        alert("Starting Save Process... (Debug)"); // Debug alert enabled
+        // alert("Starting Save Process... (Debug)"); 
 
         if (!this.eventData.location) {
             alert("Missing Location! Cannot save.");
@@ -494,28 +511,33 @@ Alpine.data('manpowerApp', () => ({
                 }
             }
 
-            // 2. Insert Boys
-            if (this.eventData.boys.length > 0) {
-                // Filter out boys that might already have IDs (if we are editing an existing event and adding more? 
-                // For now, let's assume this flow is mostly for fresh pastes or re-pastes which might duplications if not careful.
-                // Given the requirements, we'll process the current 'local' boys list.
+            // 2. Overwrite Boys List (Sequential Insert)
+            // Prepare payload
+            const boysPayload = this.eventData.boys.map(b => ({
+                event_id: currentEventId,
+                name: b.name,
+                mobile: b.mobile,
+                status: b.status || 'pending',
+                uniform_checked: b.uniformChecked || false,
+                fines: b.fines || []
+            }));
 
-                // Transform for DB
-                const dbBoys = this.eventData.boys
-                    .filter(b => !b.id) // Only insert boys without ID (new ones)
-                    .map(b => ({
-                        event_id: currentEventId,
-                        name: b.name,
-                        mobile: b.mobile,
-                        status: b.status || 'pending'
-                    }));
+            // A. Delete existing
+            const { error: delError } = await supabase
+                .from('boys')
+                .delete()
+                .eq('event_id', currentEventId);
 
-                if (dbBoys.length > 0) {
-                    const { error } = await supabase.from('boys').insert(dbBoys);
-                    if (error) {
-                        console.error("Error inserting boys:", error);
-                        alert("Error adding boys to database");
-                    }
+            if (delError) throw delError;
+
+            // B. Insert New (Sequential)
+            if (boysPayload.length > 0) {
+                for (const boy of boysPayload) {
+                    const { error: insError } = await supabase
+                        .from('boys')
+                        .insert([boy]);
+
+                    if (insError) throw insError;
                 }
             }
 
