@@ -150,23 +150,23 @@ Alpine.data('manpowerApp', () => ({
         }
     },
 
-    setupRealtime() {
-        supabase
-            .channel('public:any')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, payload => {
-                console.log('Event changed!', payload);
-                this.loadEventsList();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'boys' }, payload => {
-                // Debounce loadBoys
-                clearTimeout(this.loadBoysDebounceTimer);
-                this.loadBoysDebounceTimer = setTimeout(() => {
-                    console.log('Debounced Boys Refresh');
-                    this.loadBoys();
-                }, 500);
-            })
-            .subscribe();
-    },
+    // setupRealtime() { // This method was removed and its logic moved into init()
+    //     supabase
+    //         .channel('public:any')
+    //         .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, payload => {
+    //             console.log('Event changed!', payload);
+    //             this.loadEventsList();
+    //         })
+    //         .on('postgres_changes', { event: '*', schema: 'public', table: 'boys' }, payload => {
+    //             // Debounce loadBoys
+    //             clearTimeout(this.loadBoysDebounceTimer);
+    //             this.loadBoysDebounceTimer = setTimeout(() => {
+    //                 console.log('Debounced Boys Refresh');
+    //                 this.loadBoys();
+    //             }, 500);
+    //         })
+    //         .subscribe();
+    // },
 
     async createOrUpdateEvent() {
         const payload = {
@@ -519,6 +519,8 @@ Alpine.data('manpowerApp', () => ({
             }
 
             // 2. Overwrite Boys List (Sequential Insert)
+            this.isUpdating = true; // SUPPRESS Realtime
+
             // Prepare payload
             const boysPayload = this.eventData.boys.map(b => ({
                 event_id: currentEventId,
@@ -551,9 +553,12 @@ Alpine.data('manpowerApp', () => ({
                 }
             }
 
+            this.isUpdating = false; // RESUME Realtime
+
             alert("Event Saved & Published to Captains! ✅");
             this.isUnsaved = false;
             this.loadEventsList(); // Refresh dashboard list
+            this.loadBoys(); // Manual reload to show final state
         } catch (e) {
             console.error(e);
             alert("Error saving event: " + e.message);
