@@ -540,6 +540,9 @@ Alpine.data('manpowerApp', () => ({
             // B. Insert New (Sequential)
             if (boysPayload.length > 0) {
                 for (const boy of boysPayload) {
+                    // Small delay
+                    await new Promise(r => setTimeout(r, 50));
+
                     const { error: insError } = await supabase
                         .from('boys')
                         .insert([boy]);
