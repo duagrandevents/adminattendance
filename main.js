@@ -24,11 +24,15 @@ Alpine.data('manpowerApp', () => ({
     isEditEventModalOpen: false,
     isEditBoyModalOpen: false,
     isAdminModalOpen: false,
+    isUnsaved: false,
 
     // Temporary state for editing
     editingBoyIndex: null,
     editingBoyData: { name: '', mobile: '' },
+
+    // Utils
     pastedText: '',
+    loadBoysDebounceTimer: null,
 
     // Admin State
     adminMode: true,
@@ -152,11 +156,14 @@ Alpine.data('manpowerApp', () => ({
             .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, payload => {
                 console.log('Event changed!', payload);
                 this.loadEventsList();
-                // If we are in detail view, we might want to refresh that too, but list is priority for dashboard
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'boys' }, payload => {
-                console.log('Boys changed!', payload);
-                this.loadBoys(); // Refresh list
+                // Debounce loadBoys
+                clearTimeout(this.loadBoysDebounceTimer);
+                this.loadBoysDebounceTimer = setTimeout(() => {
+                    console.log('Debounced Boys Refresh');
+                    this.loadBoys();
+                }, 500);
             })
             .subscribe();
     },
